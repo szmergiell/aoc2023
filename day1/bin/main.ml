@@ -15,17 +15,58 @@ let is_digit char =
     | '0' .. '9' -> true
     | _ -> false
 
+let is_digit_word str =
+    match str with
+    | "one" -> 1
+    | "two" -> 2
+    | "three" -> 3
+    | "four" -> 4
+    | "five" -> 5
+    | "six" -> 6
+    | "seven" -> 7
+    | "eight" -> 8
+    | "nine" -> 9
+    | _ -> 0
+
 let get_digits s =
     let rec exp i l =
-        if i < 0 then l else exp (i - 1) (if is_digit s.[i] then (int_of_char s.[i] - int_of_char '0') :: l else l) in
+        match i with
+        | _ when (i < 0) -> l
+        | _ -> exp (i - 1) (
+            match s.[i] with
+            | c when (is_digit c) -> (int_of_char s.[i] - int_of_char '0') :: l
+            | 'o' | 't' | 'f' | 's' | 'e' | 'n' ->
+                    begin
+                        let ml = min 5 (String.length s - i) in
+                        match ml with
+                        | _ when (ml < 3) -> l
+                        | _ ->
+                                begin
+                                    let substr = String.sub s i in
+                                    let id l = is_digit_word (substr l) in
+                                    match s with
+                                    | _ when (ml >= 3 && id 3 <> 0) -> id 3 :: l
+                                    | _ when (ml >= 4 && id 4 <> 0) -> id 4 :: l
+                                    | _ when (ml >= 5 && id 5 <> 0) -> id 5 :: l
+                                    | _ -> l
+                                end;
+                    end;
+            | _ -> l
+            ) in
     exp (String.length s - 1) []
 
 let sum1d list =
-    let l = List.length list in
-    if l = 0 then 0
-    else (List.nth list 0) * 10 + (List.nth list (l - 1))
+    match list with
+    | [] -> 0
+    | _ -> (List.nth list 0) * 10 + (List.nth list ((List.length list) - 1))
 
 let digits = List.map get_digits lines
+
+let _int_list_list_pp = [%show: int list list]
+
+let _string_of_int_list_list = Format.asprintf "@[%a@]" _int_list_list_pp
+
+(** let () = print_endline (_string_of_int_list_list digits) *)
 
 let rec sum2d arr2d = match arr2d with
     | [] -> 0

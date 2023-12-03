@@ -1,4 +1,5 @@
 (executable
  (public_name day1)
  (name main)
- (libraries day1))
+ (preprocess (pps ppx_show))
+ (libraries day1 ppx_show.runtime))
