@@ -1,16 +1,10 @@
-let input = "input1.txt"
-
-let read_file filename =
-    let ic = open_in_bin filename in
-    let doc = really_input_string ic (in_channel_length ic) in
-    close_in ic;
-    doc
-
-let doc = read_file input
-
-let lines = String.split_on_char '\n' doc
-
-let line : string = List.nth lines 0
+let read_lines name =
+    let ic = open_in name in
+    let try_read () = try Some (input_line ic) with End_of_file -> None in
+    let rec loop acc = match try_read () with
+    | Some s -> loop (s :: acc)
+    | None -> close_in ic; List.rev acc in
+    loop []
 
 type draw = {
     red : int;
@@ -22,8 +16,6 @@ type game = {
     number: int;
     draws : draw list;
 }
-
-let () = print_endline line
 
 let regex_get_number regex line =
     try
@@ -42,9 +34,9 @@ let parse_game_number line =
     regex_get_number "Game \\([0-9]+\\)" line
 
 let parse_game_draw draw_str =
-    let red = regex_get_number "\\([0-9]\\)+ red" draw_str in
-    let green = regex_get_number "\\([0-9]\\)+ green" draw_str in
-    let blue = regex_get_number "\\([0-9]\\)+ blue" draw_str in
+    let red = regex_get_number "\\([0-9]+\\) red" draw_str in
+    let green = regex_get_number "\\([0-9]+\\) green" draw_str in
+    let blue = regex_get_number "\\([0-9]+\\) blue" draw_str in
     {
         red = get_some_or red 0;
         green = get_some_or green 0;
@@ -60,17 +52,31 @@ let parse_game line = {
         draws = parse_game_draws line;
     }
 
-let game = parse_game line
-
 let string_of_draw draw =
     Printf.sprintf "{ red = %d; green = %d, blue = %d; }" draw.red draw.green draw.blue
 
-let string_of_draws draws =
-    List.map (fun d -> Printf.sprintf "Draw number: %d %s" 0 (string_of_draw d)) draws
-
 let string_of_game game =
-    Printf.sprintf "Game: %d" game.number
+    let s = Printf.sprintf "Game: %d" game.number in
+    game.draws
+    |> List.map string_of_draw
+    |> List.fold_left (fun acc s -> acc ^ "\n" ^ s) s
 
-let () = (string_of_draws game.draws)
-    |> List.iter print_endline
+let is_possible_game game =
+    if List.for_all (fun d -> d.red <= 12 && d.green <= 13 && d.blue <= 14) game.draws
+    then game.number
+    else 0
+
+
+let lines = read_lines "input2.txt"
+
+let ( << ) f g x = f (g x)
+let ( >> ) f g x = g (f x)
+
+let result =
+    let games = List.map parse_game lines in
+    (** games |> List.iter (string_of_game >> print_endline); *)
+    let scores = List.map is_possible_game games in
+    List.fold_left (fun sum score -> sum + score) 0 scores
+
+let () = print_int result
 
