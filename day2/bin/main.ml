@@ -66,17 +66,34 @@ let is_possible_game game =
     then game.number
     else 0
 
+let least_cubes_required game =
+    let max a b = if a > b then a else b in
+    let rec min_cubes l r g b =
+        match l with
+        | [] -> (r, g, b)
+        | h :: bd -> min_cubes bd
+            (max h.red r)
+            (max h.green g)
+            (max h.blue b) in
+    min_cubes game.draws 0 0 0
 
 let lines = read_lines "input2.txt"
 
-let ( << ) f g x = f (g x)
 let ( >> ) f g x = g (f x)
 
+let games = List.map parse_game lines
+
+(** let () = games |> List.iter (string_of_game >> print_endline) *)
+
 let result =
-    let games = List.map parse_game lines in
-    (** games |> List.iter (string_of_game >> print_endline); *)
     let scores = List.map is_possible_game games in
     List.fold_left (fun sum score -> sum + score) 0 scores
 
-let () = print_int result
+let () = Printf.printf "%d\n" result
+
+let result2 =
+    let scores = List.map least_cubes_required games in
+    List.fold_left (fun sum (r, g, b) -> sum + r * g * b) 0 scores
+
+let () = Printf.printf "%d\n" result2
 
